@@ -1,3 +1,3 @@
 # jaguar_utils
 
-This package contains various tools and utilities to use with the UoS Jaguar bot for global localisation applications.
+This package contains various tools and utilities to use with the UoS Jaguar bot for localisation applications.
