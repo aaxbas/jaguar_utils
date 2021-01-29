@@ -13,6 +13,8 @@ find_package(catkin REQUIRED COMPONENTS
   tf
   PCL
   pcl_ros
+  tf_conversions
+  eigen_conversions
 )
 
 
@@ -23,7 +25,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES tf_extractor
-#  CATKIN_DEPENDS roscpp rospy tf
+  CATKIN_DEPENDS roscpp rospy tf tf_conversions eigen_conversions
 #  DEPENDS system_lib
 )
 

@@ -6,11 +6,28 @@
 #include <pcl_conversions/pcl_conversions.h>
 #include <iostream>
 #include <tf/transform_broadcaster.h>
+#include <Eigen/Geometry>
+#include "tf_conversions/tf_eigen.h"
+#include "eigen_conversions/eigen_kdl.h"
 
 
 /** @brief A ROS node used to publish pointclouds and odometry from a directory containing pcd and csv/path files
  *  @author Ahmed Abbas - (github: aaxbas)
  */
+
+
+Eigen::Affine3d create_rotation_matrix(double ax, double ay, double az) {
+  Eigen::Affine3d rx =
+      Eigen::Affine3d(Eigen::AngleAxisd(ax, Eigen::Vector3d(1, 0, 0)));
+  Eigen::Affine3d ry =
+      Eigen::Affine3d(Eigen::AngleAxisd(ay, Eigen::Vector3d(0, 1, 0)));
+  Eigen::Affine3d rz =
+      Eigen::Affine3d(Eigen::AngleAxisd(az, Eigen::Vector3d(0, 0, 1)));
+  return rz * ry * rx;
+}
+
+
+
 class PCDReaderNode{
 
     protected:
@@ -19,24 +36,45 @@ class PCDReaderNode{
     public:
     std::string folder, child_frame, parent_frame, path_topic, csv_path;
     int rate, frame_nr=0;
-    bool use_path, use_csv, use_tf;
+    bool use_path, use_csv, use_tf, publish_sensor_offset;
+    std::string pc_frame, sensor_link;
     nav_msgs::Path path;
     nav_msgs::Odometry odom;
     std::ifstream csv;
     tf::TransformBroadcaster br;
     ros::Publisher odom_pub, cloud_pub;
+    Eigen::Affine3d Toffset;
+    tf::Transform Toffset_tf;
 
 
     PCDReaderNode(ros::NodeHandle nh) : _n(ros::NodeHandle()){
         nh.param<std::string>("folder_path", folder, "/home/abbas/DATA/longshaw_short_path_0/registered_cloud_local_map_frame/");
+        nh.param<std::string>("sensor_link", sensor_link, "/laser_link");
         nh.param<std::string>("child_frame_id", child_frame, "/base_link");
         nh.param<std::string>("parent_frame_id", parent_frame, "/odom");
         nh.param<std::string>("path_topic", path_topic, "/lio_sam/mapping/path");
         nh.param<std::string>("csv_path", csv_path, "/home/abbas/DATA/longshaw_short_path_0/trajectory.csv");
+        nh.param<std::string>("pc_frame", pc_frame, "/base_link");
+
         
+        double x, y, z, ex, ey, ez;
+        nh.param<double>("sensor_x",  x, 0);
+        nh.param<double>("sensor_y",  y, 0);
+        nh.param<double>("sensor_z",  z, 0);
+        nh.param<double>("sensor_ex", ex, 0);
+        nh.param<double>("sensor_ey", ey, 0);
+        nh.param<double>("sensor_ez", ez, 0);
+        Eigen::Affine3d r = create_rotation_matrix(ex, ey, ez);
+        Eigen::Affine3d t(Eigen::Translation3d(Eigen::Vector3d(x, y, z)));
+        Toffset = r*t;
+        tf::poseEigenToTF(Toffset, Toffset_tf);
+
+
+
         nh.param<bool>("read_csv", use_csv, true);
         nh.param<bool>("use_path", use_path, false);
         nh.param<bool>("use_tf",use_tf, true);
+        nh.param<bool>("publish_sensor_offset",publish_sensor_offset, false);
 
         nh.param<int>("rate", rate, 10);
 
@@ -157,7 +195,7 @@ class PCDReaderNode{
 
             ros::Time time(path.poses[count].header.seq);
 
-            br.sendTransform(tf::StampedTransform(t, time, parent_frame, child_frame));
+            br.sendTransform(tf::StampedTransform(t, time, child_frame, child_frame));
             cloud_msg.header.seq = path.poses[count].header.seq;
         }
 
@@ -212,14 +250,14 @@ class PCDReaderNode{
 
                 ros::Time time(odom.header.seq);
 
-                br.sendTransform(tf::StampedTransform(t, time, parent_frame, child_frame));
+                br.sendTransform(tf::StampedTransform(t,          time, parent_frame, child_frame));
+                if(publish_sensor_offset)
+                  br.sendTransform(tf::StampedTransform(Toffset_tf, time, child_frame,  sensor_link));
             }
         }
 
-        output.header.frame_id = child_frame;
-
+        output.header.frame_id = pc_frame;
         cloud_pub.publish(output);
-
         frame_nr++;
         return true;
     }
