@@ -1,18 +1,22 @@
 <launch>
-
-    <node pkg="jaguar_utils" type="pcd_reader" name="pcd_reader" >
-       <param name="folder_path" value="/home/daniel/Documents/rosbag/sheffield/longshaw_short_path_0/deskewed_cloud_lidar_frame/" />
-       <param name="csv_path" value="/home/daniel/Documents/rosbag/sheffield/longshaw_short_path_0/trajectory.csv" />
-       <param name="sensor_x" value="0.00314"  />
+    <arg name="path" default="/home/abbas/DATA/longshaw_short_path_0"/>
+    <node pkg="jaguar_utils" type="pcd_reader" name="p" >
+       <param name="folder_path" value="$(arg path)/deskewed_cloud_lidar_frame/" />
+       <param name="csv_path" value="$(arg path)/trajectory.csv" />
+       <param name="sensor_x" value="0"  /> <!--0.01936-->
        <param name="sensor_y" value="0"  />
-       <param name="sensor_z" value="0.75"  />
+       <param name="sensor_z" value="0"  /> <!--0.64805-->
        <param name="sensor_ex" value="0" />
        <param name="sensor_ey" value="0" />
-       <param name="sensor_ez" value="3.1415926535" />
+       <param name="sensor_ez" value="0" /> <!--3.1415926535-->
        <param name="pc_frame" value="/laser_link" />
        <param name="publish_sensor_offset" value="true" />
     </node>
 
-    <node type="rviz" name="rviz" pkg="rviz" args="-d $(find jaguar_utils)/rviz/vis.rviz" />
+    <node type="rviz" name="rviz" pkg="rviz" args="-d $(find jaguar_utils)/rviz/odom_test.rviz" />
+    
+    
+    <arg name="file_1" default="map_and_trajectory.bag"/>
+    <node pkg="rosbag" type="play" name="player" output="screen" args="-k --wait-for-subscribers $(arg path)/$(arg file_1)"/>
 
 </launch>

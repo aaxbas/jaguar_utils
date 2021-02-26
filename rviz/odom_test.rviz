@@ -10,6 +10,7 @@ Panels:
         - /PointCloud21/Autocompute Value Bounds1
         - /Odometry1
         - /Odometry1/Shape1
+        - /PointCloud23
       Splitter Ratio: 0.5
     Tree Height: 728
   - Class: rviz/Selection
@@ -59,16 +60,16 @@ Visualization Manager:
     - Alpha: 1
       Autocompute Intensity Bounds: false
       Autocompute Value Bounds:
-        Max Value: 20.502933502197266
-        Min Value: -4.25330114364624
+        Max Value: 17.404096603393555
+        Min Value: -1.3620574474334717
         Value: true
       Axis: Z
       Channel Name: intensity
       Class: rviz/PointCloud2
       Color: 255; 255; 255
-      Color Transformer: AxisColor
-      Decay Time: 3
-      Enabled: false
+      Color Transformer: Intensity
+      Decay Time: 0
+      Enabled: true
       Invert Rainbow: false
       Max Color: 255; 255; 255
       Max Intensity: 4096
@@ -85,7 +86,7 @@ Visualization Manager:
       Unreliable: false
       Use Fixed Frame: true
       Use rainbow: true
-      Value: false
+      Value: true
     - Class: rviz/TF
       Enabled: true
       Frame Timeout: 15
@@ -95,7 +96,13 @@ Visualization Manager:
           Value: true
         laser_link:
           Value: true
+        laser_link_fuser:
+          Value: true
         odom:
+          Value: true
+        submap_node0:
+          Value: true
+        world:
           Value: true
       Marker Scale: 1
       Name: TF
@@ -107,6 +114,12 @@ Visualization Manager:
           base_link:
             laser_link:
               {}
+          laser_link_fuser:
+            {}
+          submap_node0:
+            {}
+        world:
+          {}
       Update Interval: 0
       Value: true
     - Alpha: 1
@@ -166,7 +179,7 @@ Visualization Manager:
           Value: true
         Value: true
       Enabled: true
-      Keep: 100
+      Keep: 1000
       Name: Odometry
       Position Tolerance: 1
       Shape:
@@ -185,8 +198,8 @@ Visualization Manager:
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
-        Max Value: 10
-        Min Value: -10
+        Max Value: 34.14763641357422
+        Min Value: -3.8318610191345215
         Value: true
       Axis: Z
       Channel Name: intensity
@@ -197,7 +210,7 @@ Visualization Manager:
       Enabled: true
       Invert Rainbow: false
       Max Color: 255; 255; 255
-      Max Intensity: 1961
+      Max Intensity: 5963.5
       Min Color: 0; 0; 0
       Min Intensity: 10
       Name: PointCloud2
@@ -205,7 +218,7 @@ Visualization Manager:
       Queue Size: 10
       Selectable: true
       Size (Pixels): 3
-      Size (m): 0.009999999776482582
+      Size (m): 0.10999999940395355
       Style: Flat Squares
       Topic: /lio_sam/mapping/map_global
       Unreliable: false
@@ -269,6 +282,36 @@ Visualization Manager:
       Topic: /encoder_odom
       Unreliable: false
       Value: true
+    - Alpha: 1
+      Autocompute Intensity Bounds: true
+      Autocompute Value Bounds:
+        Max Value: 10
+        Min Value: -10
+        Value: true
+      Axis: Z
+      Channel Name: intensity
+      Class: rviz/PointCloud2
+      Color: 255; 255; 255
+      Color Transformer: Intensity
+      Decay Time: 0
+      Enabled: false
+      Invert Rainbow: false
+      Max Color: 255; 255; 255
+      Max Intensity: 181
+      Min Color: 0; 0; 0
+      Min Intensity: 0
+      Name: PointCloud2
+      Position Transformer: XYZ
+      Queue Size: 10
+      Selectable: true
+      Size (Pixels): 3
+      Size (m): 0.009999999776482582
+      Style: Flat Squares
+      Topic: /lio_sam/mapping/path_cloud
+      Unreliable: false
+      Use Fixed Frame: true
+      Use rainbow: true
+      Value: false
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -297,7 +340,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 193.16624450683594
+      Distance: 155.0251922607422
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -312,10 +355,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 1.1353983879089355
+      Pitch: 0.27479666471481323
       Target Frame: laser_link
       Value: Orbit (rviz)
-      Yaw: 5.073575973510742
+      Yaw: 0.655394971370697
     Saved: ~
 Window Geometry:
   Displays:

@@ -9,13 +9,11 @@
 #include <Eigen/Geometry>
 #include "tf_conversions/tf_eigen.h"
 #include "eigen_conversions/eigen_kdl.h"
+#include <pcl/common/transforms.h>
 
-
-/** @brief A ROS node used to publish pointclouds and odometry from a directory containing pcd and csv/path files
- *  @author Ahmed Abbas - (github: aaxbas)
- */
-
-
+/**
+ * @brief create an Affine3d rotation_matrix
+ */ 
 Eigen::Affine3d create_rotation_matrix(double ax, double ay, double az) {
   Eigen::Affine3d rx =
       Eigen::Affine3d(Eigen::AngleAxisd(ax, Eigen::Vector3d(1, 0, 0)));
@@ -28,6 +26,9 @@ Eigen::Affine3d create_rotation_matrix(double ax, double ay, double az) {
 
 
 
+/** @brief A ROS node used to publish pointclouds and odometry from a directory containing pcd and csv/path files
+ *  @author Ahmed Abbas - (github: aaxbas)
+ */
 class PCDReaderNode{
 
     protected:
@@ -45,6 +46,7 @@ class PCDReaderNode{
     ros::Publisher odom_pub, cloud_pub;
     Eigen::Affine3d Toffset;
     tf::Transform Toffset_tf;
+    double x, y, z, ex, ey, ez;
 
 
     PCDReaderNode(ros::NodeHandle nh) : _n(ros::NodeHandle()){
@@ -57,15 +59,17 @@ class PCDReaderNode{
         nh.param<std::string>("pc_frame", pc_frame, "/base_link");
 
         
-        double x, y, z, ex, ey, ez;
+        
         nh.param<double>("sensor_x",  x, 0);
         nh.param<double>("sensor_y",  y, 0);
         nh.param<double>("sensor_z",  z, 0);
         nh.param<double>("sensor_ex", ex, 0);
         nh.param<double>("sensor_ey", ey, 0);
         nh.param<double>("sensor_ez", ez, 0);
+        
         Eigen::Affine3d r = create_rotation_matrix(ex, ey, ez);
         Eigen::Affine3d t(Eigen::Translation3d(Eigen::Vector3d(x, y, z)));
+        
         Toffset = r*t;
         tf::poseEigenToTF(Toffset, Toffset_tf);
 
@@ -86,8 +90,9 @@ class PCDReaderNode{
 
             csv.open(csv_path);
 
-            if(csv.eof()){
-                ROS_ERROR("The file doesn't exist");
+            if(csv.eof() || !csv){
+                ROS_ERROR("The file at path %s doesn't exist",csv_path.c_str());
+                exit(1);
             }
             
             readCSV(csv);
@@ -167,6 +172,7 @@ class PCDReaderNode{
             ROS_INFO("No more point clouds to read!");
             return (false);
         }
+        pcl::transformPointCloud(*cloud, *cloud, Toffset.cast<double>().matrix());
         pcl::toROSMsg(*cloud, cloud_msg);
         return true;
     }
@@ -221,17 +227,31 @@ class PCDReaderNode{
             };
         } else if (use_csv){
             nav_msgs::Odometry odom = toOdom(readCSV(csv));
-            odom.header.frame_id = parent_frame;
-            odom.child_frame_id = child_frame;
+            odom.header.frame_id = parent_frame;  // odom frame
+            odom.child_frame_id = child_frame;    // base_link
             
 
             tf::Pose tp;
             tf::poseMsgToTF(odom.pose.pose, tp);
+            //tp.getOrigin().setX(-tp.getOrigin().getX());
+            //tp.getOrigin().setY(-tp.getOrigin().getY());
             tf::Quaternion q_rot, q = tp.getRotation();
             
-            q_rot.setRPY(0, 0, 3.14159); //TODO: Make this not hardcoded
-            q *= q_rot;
+            q_rot.setRPY(0, 0, ez);//#3.1415926535); //TODO: Make this not hardcoded
+            q = q_rot * q;  //  q  = q_rot * q; 
             tp.setRotation(q);
+
+            /**
+             *   tf::Pose tp;
+            tf::poseMsgToTF(odom.pose.pose, tp);
+
+            tp.setRotation(tp.getRotation()*Toffset_tf.getRotation());
+            
+            geometry_msgs::Pose pose;
+            tf::poseTFToMsg(tp, pose);
+            odom.pose.pose = pose;
+            odom_pub.publish(odom);
+            */
 
             geometry_msgs::Pose pose;
             tf::poseTFToMsg(tp, pose);
@@ -256,7 +276,8 @@ class PCDReaderNode{
             }
         }
 
-        output.header.frame_id = pc_frame;
+        output.header.frame_id = pc_frame;  // laser_link
+
         cloud_pub.publish(output);
         frame_nr++;
         return true;
@@ -277,6 +298,8 @@ int main(int argc, char** argv){
     PCDReaderNode r(nh);
    
     ros::Rate loop_rate(10);
+    for(int i = 0; i < 50; i++)
+        loop_rate.sleep();
 
     while(ros::ok() && r.processFrame()){
 

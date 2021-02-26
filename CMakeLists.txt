@@ -52,3 +52,6 @@ target_link_libraries(pcl_counter ${catkin_LIBRARIES})
 
 add_executable(scale_odom src/scale_twist.cpp)
 target_link_libraries(scale_odom ${catkin_LIBRARIES})
+
+add_executable(odom_reader src/odom_reader.cpp)
+target_link_libraries(odom_reader ${catkin_LIBRARIES})
