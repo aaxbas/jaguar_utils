@@ -1,5 +1,5 @@
 <launch>
-    <arg name="path" default="/home/abbas/DATA/longshaw_short_path_0"/>
+    <arg name="path" default="/home/abbas/DATA/courtyard_wed_afternoon_teach"/>
     <node pkg="jaguar_utils" type="pcd_reader" name="p" >
        <param name="folder_path" value="$(arg path)/deskewed_cloud_lidar_frame/" />
        <param name="csv_path" value="$(arg path)/trajectory.csv" />
